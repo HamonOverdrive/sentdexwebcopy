@@ -1,6 +1,8 @@
 from flask import Flask, render_template, flash, request, url_for, redirect
 from content_management import Content
 
+from dbconnect import connection
+
 TOPIC_DICT = Content()
 
 app = Flask(__name__)
@@ -47,6 +49,13 @@ def loginpage():
         return render_template("login.html", error = error)
 
 
+@app.route('/register/', methods = ['GET','POST'])
+def register_page():
+    try:
+        c, conn = connection()
+        return("okay")
+    except Exception as e:
+        return(str(e))
 
 
 
