@@ -79,7 +79,7 @@ def register_page():
             password = sha256_crypt.encrypt((str(form.password.data)))
             c, conn = connection()
 
-            x = c.execute("SELECT * FROM users WHERE username = '{}'".format(thwart(username)))
+            x = c.execute("SELECT * FROM users WHERE username = (%s)", [(thwart(username))])
 
             if int(x) > 0:
                 flash("That username is already taken, please choose another")
