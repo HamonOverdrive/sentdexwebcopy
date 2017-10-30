@@ -38,23 +38,27 @@ def method_not_found(e):
 def loginpage():
     error = ''
     try:
+        c, conn = connection()
         if request.method == "POST":
-            attempted_username = request.form['username']
-            attempted_password = request.form['password']
+            data = c.execute("SELECT * FROM users WHERE username = (%s)", [thwart(request.form['username'])])
+            data = c.fetchone()[2]
 
-            # flash(attempted_username)
-            # flash(attempted_password)
+            if sha256_crypt.verify(request.form['password'], data):
+                session['logged_in'] = True
+                session['username'] = request.form['username']
 
-            if attempted_username == "admin" and attempted_password == "password":
-                return redirect(url_for('dashboard'))
+                flash("You are now logged in")
+                return redirect(url_for("dashboard"))
             else:
-                error = "Invalid credentials. Try Again."
+                error = "Invalid credentials, try again."
+        gc.collect()
 
         return render_template("login.html", error=error)
 
     except Exception as e:
         # flash(e) # delete this when done
-        return render_template("login.html", error = error)
+        error = "Invalid credentials, try again."
+        return render_template("login.html", error=error)
 
 class RegistrationForm(Form):
     username = StringField('Username', [validators.Length(min=4, max=20)])
@@ -81,6 +85,7 @@ def register_page():
 
             x = c.execute("SELECT * FROM users WHERE username = (%s)", [(thwart(username))])
 
+            # check if x already exists with this as x is 1 if username exists
             if int(x) > 0:
                 flash("That username is already taken, please choose another")
                 return render_template('register.html', form = form)
