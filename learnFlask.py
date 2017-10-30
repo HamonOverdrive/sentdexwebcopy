@@ -8,6 +8,8 @@ from passlib.hash import sha256_crypt
 
 from MySQLdb import escape_string as thwart
 
+from functools import wraps
+
 from dbconnect import connection
 import gc
 
@@ -33,6 +35,25 @@ def page_not_found(e):
 @app.errorhandler(405)
 def method_not_found(e):
     return render_template("405.html")
+
+def login_required(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'logged_in' in session:
+            return f(*args, **kwargs)
+        else:
+            flash("You need to login first")
+            return redirect(url_for('loginpage'))
+    return wrap
+
+
+@app.route("/logout/")
+@login_required
+def logout():
+    session.clear()
+    flash("You have been logged out!")
+    gc.collect()
+    return redirect(url_for('dashboard'))
 
 @app.route('/login/', methods = ['GET','POST'])
 def loginpage():
